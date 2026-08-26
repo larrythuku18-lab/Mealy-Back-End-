@@ -3,6 +3,8 @@ from flask import Blueprint, request, jsonify, g
 from config import db
 from models import Royalty, Order
 from routes.auth import auth_required
+from errors import bad_request, unauthorized, not_found
+from validators import get_json_or_400, validate_required_fields
 
 royalty_bp = Blueprint('royalty', __name__)
 
@@ -10,21 +12,25 @@ royalty_bp = Blueprint('royalty', __name__)
 @royalty_bp.route('/', methods=['POST'])
 @auth_required
 def create_royalty():
-    data = request.get_json()
+    data, err = get_json_or_400()
+    if err:
+        return err
+
+    ok, field_err = validate_required_fields(data, ['order_id', 'amount'])
+    if not ok:
+        return field_err
+
     order_id = data.get('order_id')
     amount = data.get('amount')
     period = data.get('period')
 
-    if not order_id or amount is None:
-        return jsonify({'error': 'order_id and amount are required'}), 400
-
     order = db.session.get(Order, order_id)
     if not order:
-        return jsonify({'error': 'Order not found'}), 404
+        return not_found('Order not found')
 
     # Check if user owns this order
     if order.user_id != g.current_user.id:
-        return jsonify({'error': 'Unauthorized'}), 403
+        return unauthorized('You can only create royalties for your own orders')
 
     royalty = Royalty(
         user_id=g.current_user.id,
@@ -46,10 +52,10 @@ def create_royalty():
 def get_royalty(royalty_id):
     royalty = db.session.get(Royalty, royalty_id)
     if not royalty:
-        return jsonify({'error': 'Royalty not found'}), 404
+        return not_found('Royalty not found')
 
     if royalty.user_id != g.current_user.id and g.current_user.role != 'admin':
-        return jsonify({'error': 'Unauthorized'}), 403
+        return unauthorized('You can only view your own royalties')
 
     return jsonify({'royalty': royalty.to_dict()}), 200
 

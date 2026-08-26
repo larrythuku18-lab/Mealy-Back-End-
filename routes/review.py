@@ -3,6 +3,8 @@ from flask import Blueprint, request, jsonify, g
 from config import db
 from models import Review, MealOption
 from routes.auth import auth_required
+from errors import bad_request, not_found, conflict
+from validators import get_json_or_400, validate_required_fields, validate_rating
 
 review_bp = Blueprint('review', __name__)
 
@@ -10,20 +12,25 @@ review_bp = Blueprint('review', __name__)
 @review_bp.route('/', methods=['POST'])
 @auth_required
 def create_review():
-    data = request.get_json()
+    data, err = get_json_or_400()
+    if err:
+        return err
+
+    ok, field_err = validate_required_fields(data, ['meal_option_id', 'rating'])
+    if not ok:
+        return field_err
+
     meal_option_id = data.get('meal_option_id')
     rating = data.get('rating')
     comment = data.get('comment')
 
-    if not meal_option_id or rating is None:
-        return jsonify({'error': 'meal_option_id and rating are required'}), 400
-
-    if not isinstance(rating, int) or rating < 1 or rating > 5:
-        return jsonify({'error': 'Rating must be an integer between 1 and 5'}), 400
+    ok, rating_err = validate_rating(rating)
+    if not ok:
+        return rating_err
 
     meal_option = db.session.get(MealOption, meal_option_id)
     if not meal_option:
-        return jsonify({'error': 'Meal option not found'}), 404
+        return not_found('Meal option not found')
 
     # Check if user already reviewed this meal option
     existing = Review.query.filter_by(
@@ -31,7 +38,7 @@ def create_review():
         meal_option_id=meal_option_id
     ).first()
     if existing:
-        return jsonify({'error': 'You have already reviewed this meal option'}), 409
+        return conflict('You have already reviewed this meal option')
 
     review = Review(
         user_id=g.current_user.id,
