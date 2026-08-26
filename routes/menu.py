@@ -40,6 +40,8 @@ def create_meal_option():
         name=name,
         description=description,
         price=float(price),
+        category=data.get('category'),
+        image=data.get('image'),
         caterer_id=data.get('catererId'),
     )
     db.session.add(meal_option)
@@ -75,6 +77,10 @@ def update_meal_option(meal_option_id):
         meal_option.description = data['description']
     if 'price' in data:
         meal_option.price = float(data['price'])
+    if 'category' in data:
+        meal_option.category = data['category']
+    if 'image' in data:
+        meal_option.image = data['image']
     if 'catererId' in data:
         meal_option.caterer_id = data['catererId']
 
