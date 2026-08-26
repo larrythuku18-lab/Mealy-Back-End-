@@ -2,7 +2,7 @@ import os
 import click
 from flask import Flask, jsonify, g
 from flask_cors import CORS
-from datetime import datetime
+from datetime import datetime, timezone
 
 from config import db, Config
 
@@ -50,14 +50,14 @@ def create_app(config_name=None):
         return jsonify({
             'message': 'Mealy Backend API v2.0',
             'status': 'running',
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         })
 
     @app.route('/health', methods=['GET'])
     def health():
         return jsonify({
             'status': 'UP',
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         }), 200
 
     # Error handlers
