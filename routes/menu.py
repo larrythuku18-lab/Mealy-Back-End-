@@ -4,6 +4,8 @@ from flask import Blueprint, request, jsonify
 from config import db
 from models import MealOption, DailyMenu, Category
 from routes.auth import auth_required
+from errors import bad_request, not_found
+from validators import get_json_or_400, validate_required_fields
 
 menu_bp = Blueprint('menu', __name__)
 
@@ -22,13 +24,17 @@ def list_meal_options():
 @menu_bp.route('/', methods=['POST'])
 @auth_required
 def create_meal_option():
-    data = request.get_json()
+    data, err = get_json_or_400()
+    if err:
+        return err
+
+    ok, field_err = validate_required_fields(data, ['name', 'price'])
+    if not ok:
+        return field_err
+
     name = data.get('name')
     description = data.get('description')
     price = data.get('price')
-
-    if not name or price is None:
-        return jsonify({'error': 'Name and price are required'}), 400
 
     meal_option = MealOption(
         name=name,
@@ -49,17 +55,19 @@ def create_meal_option():
 def get_meal_option(meal_option_id):
     meal_option = db.session.get(MealOption, meal_option_id)
     if not meal_option:
-        return jsonify({'error': 'Meal option not found'}), 404
+        return not_found('Meal option not found')
     return jsonify({'mealOption': meal_option.to_dict()}), 200
 
 
 @menu_bp.route('/<int:meal_option_id>', methods=['PUT'])
 @auth_required
 def update_meal_option(meal_option_id):
-    data = request.get_json()
+    data, err = get_json_or_400()
+    if err:
+        return err
     meal_option = db.session.get(MealOption, meal_option_id)
     if not meal_option:
-        return jsonify({'error': 'Meal option not found'}), 404
+        return not_found('Meal option not found')
 
     if 'name' in data:
         meal_option.name = data['name']
@@ -83,7 +91,7 @@ def update_meal_option(meal_option_id):
 def delete_meal_option(meal_option_id):
     meal_option = db.session.get(MealOption, meal_option_id)
     if not meal_option:
-        return jsonify({'error': 'Meal option not found'}), 404
+        return not_found('Meal option not found')
 
     db.session.delete(meal_option)
     db.session.commit()
@@ -112,7 +120,9 @@ def get_todays_menu():
 @auth_required
 def publish_todays_menu():
     """Publish today's menu with selected meal option IDs."""
-    data = request.get_json()
+    data, err = get_json_or_400()
+    if err:
+        return err
     meal_option_ids = data.get('mealOptionIds', [])
 
     today = date.today()
