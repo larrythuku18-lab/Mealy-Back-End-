@@ -6,6 +6,8 @@ from flask import Blueprint, request, jsonify, g, current_app
 
 from config import db
 from models import User
+from errors import bad_request, unauthorized, conflict, not_found
+from validators import get_json_or_400, validate_required_fields, validate_email
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -16,7 +18,7 @@ def auth_required(f):
     def decorated(*args, **kwargs):
         auth_header = request.headers.get('Authorization')
         if not auth_header:
-            return jsonify({'error': 'Authorization header required'}), 401
+            return unauthorized('Authorization header required')
 
         try:
             token = auth_header.split(' ')[1]
@@ -27,12 +29,12 @@ def auth_required(f):
             )
             user = db.session.get(User, data['user_id'])
             if not user:
-                return jsonify({'error': 'User not found'}), 401
+                return unauthorized('User not found')
             g.current_user = user
         except jwt.ExpiredSignatureError:
-            return jsonify({'error': 'Token has expired'}), 401
+            return unauthorized('Token has expired')
         except (jwt.InvalidTokenError, IndexError):
-            return jsonify({'error': 'Invalid token'}), 401
+            return unauthorized('Invalid token')
 
         return f(*args, **kwargs)
     return decorated
@@ -54,7 +56,9 @@ def generate_token(user):
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    data = request.get_json()
+    data, err = get_json_or_400()
+    if err:
+        return err
 
     # Frontend sends 'fullName', we store as 'name'
     name = data.get('name') or data.get('fullName')
@@ -62,10 +66,14 @@ def register():
     password = data.get('password')
 
     if not name or not email or not password:
-        return jsonify({'error': 'Name, email, and password are required'}), 400
+        return bad_request('Name, email, and password are required')
+
+    ok, email_err = validate_email(email)
+    if not ok:
+        return email_err
 
     if User.query.filter_by(email=email).first():
-        return jsonify({'error': 'Email already exists'}), 409
+        return conflict('Email already exists')
 
     password_hash = bcrypt.hashpw(
         password.encode('utf-8'), bcrypt.gensalt()
@@ -93,21 +101,23 @@ def register():
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
+    data, err = get_json_or_400()
+    if err:
+        return err
 
     # Frontend sends email for login
     email = data.get('email')
     password = data.get('password')
 
     if not email or not password:
-        return jsonify({'error': 'Email and password are required'}), 400
+        return bad_request('Email and password are required')
 
     user = User.query.filter_by(email=email).first()
     if not user:
-        return jsonify({'error': 'Invalid credentials'}), 401
+        return unauthorized('Invalid credentials')
 
     if not bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8')):
-        return jsonify({'error': 'Invalid credentials'}), 401
+        return unauthorized('Invalid credentials')
 
     token = generate_token(user)
 
