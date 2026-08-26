@@ -8,7 +8,6 @@ instance/
 *.sqlite3
 .pytest_cache/
 venv/
-env/
 .env.local
 dist/
 build/
