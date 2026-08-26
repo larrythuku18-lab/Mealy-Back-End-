@@ -1,4 +1,5 @@
 import os
+import click
 from flask import Flask, jsonify, g
 from flask_cors import CORS
 from datetime import datetime
@@ -72,6 +73,14 @@ def create_app(config_name=None):
     # Create tables
     with app.app_context():
         db.create_all()
+
+    # CLI commands
+    @app.cli.command('seed')
+    def seed_command():
+        """Seed the database with initial data."""
+        from seed import seed_database
+        seed_database()
+        click.echo('Database seeded!')
 
     return app
 
