@@ -23,6 +23,10 @@ def create_app(config_name=None):
     db.init_app(app)
     CORS(app, resources={r"/*": {"origins": app.config.get('CORS_ORIGINS', '*')}})
 
+    # Initialize middleware
+    from middleware import init_middleware
+    init_middleware(app)
+
     # Register blueprints
     from routes.auth import auth_bp
     from routes.user import user_bp
