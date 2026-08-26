@@ -29,6 +29,7 @@ def create_app(config_name=None):
     from routes.order import order_bp
     from routes.review import review_bp
     from routes.royalty import royalty_bp
+    from routes.category import category_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(user_bp, url_prefix='/api/users')
@@ -36,6 +37,7 @@ def create_app(config_name=None):
     app.register_blueprint(order_bp, url_prefix='/api/orders')
     app.register_blueprint(review_bp, url_prefix='/api/reviews')
     app.register_blueprint(royalty_bp, url_prefix='/api/royalties')
+    app.register_blueprint(category_bp, url_prefix='/api/categories')
 
     # Health check routes
     @app.route('/', methods=['GET'])
