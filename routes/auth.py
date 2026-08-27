@@ -95,15 +95,7 @@ def generate_token(user):
 # ROLE AUTHORIZATION
 
 def role_required(*allowed_roles):
-    """
-    Restrict a route to specific user roles.
-
-    Example:
-
-        @role_required('admin')
-        def admin_route():
-            ...
-    """
+    
 
     def decorator(f):
 
