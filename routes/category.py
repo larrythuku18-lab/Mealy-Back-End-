@@ -2,8 +2,7 @@ from flask import Blueprint, request, jsonify
 
 from config import db
 from models import Category
-from routes.auth import auth_required
-
+from routes.auth import auth_required, role_required
 category_bp = Blueprint('category', __name__)
 
 
@@ -17,7 +16,7 @@ def list_categories():
 
 
 @category_bp.route('/', methods=['POST'])
-@auth_required
+@role_required('admin')
 def create_category():
     """Create a new category (admin only)."""
     data = request.get_json()
