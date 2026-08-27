@@ -3,7 +3,6 @@ import click
 from flask import Flask, jsonify, g
 from flask_cors import CORS
 from datetime import datetime, timezone
-
 from config import db, Config
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -35,6 +34,7 @@ def create_app(config_name=None):
     from routes.review import review_bp
     from routes.royalty import royalty_bp
     from routes.category import category_bp
+    from routes.payment import payment_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(user_bp, url_prefix='/api/users')
@@ -43,7 +43,9 @@ def create_app(config_name=None):
     app.register_blueprint(review_bp, url_prefix='/api/reviews')
     app.register_blueprint(royalty_bp, url_prefix='/api/royalties')
     app.register_blueprint(category_bp, url_prefix='/api/categories')
+    app.register_blueprint(payment_bp, url_prefix='/api/payments')
 
+    
     # Health check routes
     @app.route('/', methods=['GET'])
     def index():
