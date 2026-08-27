@@ -20,6 +20,27 @@ def todays_orders():
         'orders': [o.to_admin_dict() for o in orders]
     }), 200
 
+@order_bp.route('/today/sales', methods=['GET'])
+@role_required('admin')
+def todays_sales():
+    """Admin view: get today's total orders and revenue."""
+
+    today = date.today()
+
+    orders = Order.query.filter_by(date=today).all()
+
+    total_orders = len(orders)
+
+    total_revenue = sum(
+        order.total_amount for order in orders
+    )
+
+    return jsonify({
+        'date': today.isoformat(),
+        'total_orders': total_orders,
+        'total_revenue': total_revenue
+    }), 200
+
 
 @order_bp.route('/', methods=['GET'])
 @auth_required
