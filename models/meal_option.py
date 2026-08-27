@@ -12,7 +12,8 @@ class MealOption(db.Model):
     price = db.Column(db.Float, nullable=False, default=0.0)
     category = db.Column(db.String(64), nullable=True)
     image = db.Column(db.String(512), nullable=True)
-    caterer_id = db.Column(db.String(128), nullable=True)
+    caterer_id = db.Column(db.Integer, db.ForeignKey('caterers.id'),nullable=True)
+    caterer = db.relationship('Caterer', backref='meal_options',  lazy=True)
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
 
     def to_dict(self):

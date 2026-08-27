@@ -20,6 +20,40 @@ def todays_orders():
         'orders': [o.to_admin_dict() for o in orders]
     }), 200
 
+@order_bp.route('/history', methods=['GET'])
+@role_required('admin')
+def order_history():
+    """Admin view: get all customer orders."""
+
+    orders = Order.query.order_by(
+        Order.created_at.desc()
+    ).all()
+
+    return jsonify({
+        'orders': [o.to_admin_dict() for o in orders]
+    }), 200
+
+@order_bp.route('/today/sales', methods=['GET'])
+@role_required('admin')
+def todays_sales():
+    """Admin view: get today's total orders and revenue."""
+
+    today = date.today()
+
+    orders = Order.query.filter_by(date=today).all()
+
+    total_orders = len(orders)
+
+    total_revenue = sum(
+        order.total_amount for order in orders
+    )
+
+    return jsonify({
+        'date': today.isoformat(),
+        'total_orders': total_orders,
+        'total_revenue': total_revenue
+    }), 200
+
 
 @order_bp.route('/', methods=['GET'])
 @auth_required
@@ -36,7 +70,9 @@ def list_orders():
 @auth_required
 def create_order():
     """Create a new order from the customer's cart."""
-    data = request.get_json()
+    data, err = get_json_or_400()
+    if err:
+        return err
 
     meal_option_ids = data.get('mealOptionIds', [])
     quantities = data.get('quantities', [])
@@ -79,6 +115,60 @@ def create_order():
         'order': order.to_dict(include_items=True)
     }), 201
 
+@order_bp.route('/<int:order_id>/change-meal', methods=['PUT'])
+@auth_required
+def change_meal_choice(order_id):
+    """Allow a customer to change their meal choice."""
+
+    data, err = get_json_or_400()
+    if err:
+        return err
+
+    new_meal_option_id = data.get('mealOptionId')
+
+    if not new_meal_option_id:
+        return bad_request('mealOptionId is required')
+
+    # Find the order
+    order = db.session.get(Order, order_id)
+
+    if not order:
+        return not_found('Order not found')
+
+    # Customer can only change their own order
+    if order.user_id != g.current_user.id:
+        return unauthorized('You can only change your own order')
+
+    # Find the new meal option
+    new_meal = db.session.get(MealOption, new_meal_option_id)
+
+    if not new_meal:
+        return not_found('Meal option not found')
+
+    # Get the existing order item
+    order_item = OrderItem.query.filter_by(
+        order_id=order.id
+    ).first()
+
+    if not order_item:
+        return not_found('Order item not found')
+
+    # Change the meal
+    order_item.meal_option_id = new_meal.id
+    order_item.price = new_meal.price
+
+    # Recalculate total
+    order.total_amount = sum(
+        item.price * item.quantity
+        for item in order.items
+    )
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Meal choice changed successfully',
+        'order': order.to_dict(include_items=True)
+    }), 200
 
 @order_bp.route('/<int:order_id>', methods=['GET'])
 @auth_required

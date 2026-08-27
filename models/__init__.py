@@ -7,8 +7,10 @@ from .category import Category
 from .review import Review
 from .royalty import Royalty
 from .payment import Payment
+from .notification import Notification
+from .caterer import Caterer
 
 __all__ = [
     'User', 'MealOption', 'DailyMenu', 'Order', 'OrderItem',
-    'Category', 'Review', 'Royalty', 'Payment', 'db'
+    'Category', 'Review', 'Royalty', 'Payment', 'Notification','Caterer' 'db'
 ]
