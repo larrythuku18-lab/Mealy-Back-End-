@@ -20,6 +20,19 @@ def todays_orders():
         'orders': [o.to_admin_dict() for o in orders]
     }), 200
 
+@order_bp.route('/history', methods=['GET'])
+@role_required('admin')
+def order_history():
+    """Admin view: get all customer orders."""
+
+    orders = Order.query.order_by(
+        Order.created_at.desc()
+    ).all()
+
+    return jsonify({
+        'orders': [o.to_admin_dict() for o in orders]
+    }), 200
+
 @order_bp.route('/today/sales', methods=['GET'])
 @role_required('admin')
 def todays_sales():
