@@ -95,3 +95,34 @@ def generate_token(user):
     return token
 
 
+# ROLE AUTHORIZATION
+
+def role_required(*allowed_roles):
+    """
+    Restrict a route to specific user roles.
+
+    Example:
+
+        @role_required('admin')
+        def admin_route():
+            ...
+    """
+
+    def decorator(f):
+
+        @wraps(f)
+        @auth_required
+        def decorated(*args, **kwargs):
+
+            if g.current_user.role not in allowed_roles:
+                return jsonify({
+                    'error': 'You do not have permission to access this resource'
+                }), 403
+
+            return f(*args, **kwargs)
+
+        return decorated
+
+    return decorator
+
+
