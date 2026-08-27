@@ -29,8 +29,6 @@ def auth_required(f):
         if not auth_header:
             return unauthorized('Authorization header required')
 
-        # Expected format:
-        # Authorization: Bearer <token>
 
         parts = auth_header.split()
 
@@ -58,7 +56,6 @@ def auth_required(f):
             if not user:
                 return unauthorized('User not found')
 
-            # Store authenticated user for the request
             g.current_user = user
 
         except jwt.ExpiredSignatureError:
@@ -126,3 +123,67 @@ def role_required(*allowed_roles):
     return decorator
 
 
+# REGISTER
+
+@auth_bp.route('/register', methods=['POST'])
+def register():
+
+    data, err = get_json_or_400()
+
+    if err:
+        return err
+
+    name = data.get('name') or data.get('full_name') or data.get('fullName')
+
+    email = data.get('email')
+    password = data.get('password')
+    phone = data.get('phone')
+    address = data.get('address')
+
+    if not name or not email or not password:
+        return bad_request(
+            'Name, email, and password are required'
+        )
+
+    ok, email_err = validate_email(email)
+
+    if not ok:
+        return email_err
+
+    email = email.strip().lower()
+
+    existing_user = User.query.filter_by(email=email).first()
+
+    if existing_user:
+        return conflict('Email already exists')
+
+    if len(password) < 6:
+        return bad_request(
+            'Password must be at least 6 characters'
+        )
+
+    password_hash = bcrypt.hashpw(
+        password.encode('utf-8'),
+        bcrypt.gensalt()
+    ).decode('utf-8')
+
+    user = User(
+        name=name,
+        email=email,
+        password_hash=password_hash,
+        phone=phone,
+        role='user',
+        address=address
+    )
+
+    db.session.add(user)
+    db.session.commit()
+
+    token = generate_token(user)
+
+    return jsonify({
+        'message': 'User registered successfully',
+        'token': token,
+        'user': user.to_dict()
+    }), 201
+    
