@@ -186,4 +186,67 @@ def register():
         'token': token,
         'user': user.to_dict()
     }), 201
-    
+
+
+# LOGIN
+
+@auth_bp.route('/login', methods=['POST'])
+def login():
+
+    data, err = get_json_or_400()
+
+    if err:
+        return err
+
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
+        return bad_request(
+            'Email and password are required'
+        )
+
+    email = email.strip().lower()
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return unauthorized('Invalid credentials')
+
+    password_correct = bcrypt.checkpw(
+        password.encode('utf-8'),
+        user.password_hash.encode('utf-8')
+    )
+
+    if not password_correct:
+        return unauthorized('Invalid credentials')
+
+    token = generate_token(user)
+
+    return jsonify({
+        'message': 'Logged in successfully',
+        'token': token,
+        'user': user.to_dict()
+    }), 200
+
+
+# LOGOUT
+
+@auth_bp.route('/logout', methods=['POST'])
+@auth_required
+def logout():
+
+    return jsonify({
+        'message': 'Logged out successfully'
+    }), 200
+
+
+# CURRENT USER
+
+@auth_bp.route('/me', methods=['GET'])
+@auth_required
+def me():
+
+    return jsonify({
+        'user': g.current_user.to_dict()
+    }), 200   
