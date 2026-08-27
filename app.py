@@ -36,6 +36,7 @@ def create_app(config_name=None):
     from routes.category import category_bp
     from routes.payment import payment_bp
     from routes.notification import notification_bp
+    from routes.sales import sales_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(user_bp, url_prefix='/api/users')
@@ -46,7 +47,7 @@ def create_app(config_name=None):
     app.register_blueprint(category_bp, url_prefix='/api/categories')
     app.register_blueprint(payment_bp, url_prefix='/api/payments')
     app.register_blueprint(notification_bp, url_prefix='/api/notifications')
-
+    app.register_blueprint(sales_bp, url_prefix='/api/sales')
     # Health check routes
     @app.route('/', methods=['GET'])
     def index():
