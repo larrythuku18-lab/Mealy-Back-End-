@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify
 
 from config import db
 from models import MealOption, DailyMenu, Category
-from routes.auth import auth_required
+from routes.auth import auth_required,role_required
 from errors import bad_request, not_found
 from validators import get_json_or_400, validate_required_fields
 
@@ -22,7 +22,7 @@ def list_meal_options():
 
 
 @menu_bp.route('/', methods=['POST'])
-@auth_required
+@role_required('admin')
 def create_meal_option():
     data, err = get_json_or_400()
     if err:
@@ -62,7 +62,7 @@ def get_meal_option(meal_option_id):
 
 
 @menu_bp.route('/<int:meal_option_id>', methods=['PUT'])
-@auth_required
+@role_required('admin')
 def update_meal_option(meal_option_id):
     data, err = get_json_or_400()
     if err:
@@ -93,7 +93,7 @@ def update_meal_option(meal_option_id):
 
 
 @menu_bp.route('/<int:meal_option_id>', methods=['DELETE'])
-@auth_required
+@role_required('admin')
 def delete_meal_option(meal_option_id):
     meal_option = db.session.get(MealOption, meal_option_id)
     if not meal_option:
@@ -123,7 +123,7 @@ def get_todays_menu():
 
 
 @menu_bp.route('/publish', methods=['POST'])
-@auth_required
+@role_required('admin')
 def publish_todays_menu():
     """Publish today's menu with selected meal option IDs."""
     data, err = get_json_or_400()

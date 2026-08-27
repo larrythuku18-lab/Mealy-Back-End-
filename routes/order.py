@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify, g
 
 from config import db
 from models import Order, OrderItem, MealOption
-from routes.auth import auth_required
+from routes.auth import auth_required, role_required
 from errors import bad_request, unauthorized, not_found
 from validators import get_json_or_400, validate_order_status
 
@@ -11,7 +11,7 @@ order_bp = Blueprint('order', __name__)
 
 
 @order_bp.route('/today', methods=['GET'])
-@auth_required
+@role_required('admin')
 def todays_orders():
     """Admin view: get all of today's orders with customer names."""
     today = date.today()
@@ -95,11 +95,8 @@ def get_order(order_id):
 
 
 @order_bp.route('/<int:order_id>/status', methods=['PUT'])
-@auth_required
+@role_required('admin')
 def update_order_status(order_id):
-    """Admin: update order status (confirmed -> preparing -> in_transit -> delivered)."""
-    if g.current_user.role != 'admin':
-        return unauthorized('Admin access required')
 
     data, err = get_json_or_400()
     if err:
