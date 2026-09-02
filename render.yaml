@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: mealy-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mealy-db
+          property: connectionString
+      - key: FLASK_ENV
+        value: production
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: SECRET_KEY
+        generateValue: true
+
+databases:
+  - name: mealy-db
+    plan: free
