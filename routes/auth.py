@@ -179,6 +179,11 @@ def register():
         password_hash=password_hash,
         phone=phone,
         role=role,
+        # This deployment only ever serves one caterer ('dev-caterer', per
+        # seed.py). Without a caterer_id, every menu/order endpoint 400s
+        # for this user ("User is not associated with a caterer"), so new
+        # signups must be attached to it too.
+        caterer_id='dev-caterer',
         address=address
     )
 

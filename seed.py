@@ -46,6 +46,7 @@ def seed_database():
             password_hash=user_pw,
             phone='+254 700 333 444',
             role='user',
+            caterer_id='dev-caterer',
             address='Westlands, Nairobi',
         )
         customer2 = User(
@@ -54,6 +55,7 @@ def seed_database():
             password_hash=user_pw,
             phone='+254 700 555 666',
             role='user',
+            caterer_id='dev-caterer',
             address='Kilimani, Nairobi',
         )
         customer3 = User(
@@ -62,6 +64,7 @@ def seed_database():
             password_hash=user_pw,
             phone='+254 700 777 888',
             role='user',
+            caterer_id='dev-caterer',
             address='CBD, Nairobi',
         )
         customer4 = User(
@@ -70,6 +73,7 @@ def seed_database():
             password_hash=user_pw,
             phone='+254 700 999 000',
             role='user',
+            caterer_id='dev-caterer',
             address='Kasarani, Nairobi',
         )
 
