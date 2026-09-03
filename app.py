@@ -40,7 +40,7 @@ def create_app(config_name=None):
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(user_bp, url_prefix='/api/users')
-    app.register_blueprint(menu_bp, url_prefix='/api/menu')
+    app.register_blueprint(menu_bp, url_prefix='/api/menus')
     app.register_blueprint(order_bp, url_prefix='/api/orders')
     app.register_blueprint(review_bp, url_prefix='/api/reviews')
     app.register_blueprint(royalty_bp, url_prefix='/api/royalties')

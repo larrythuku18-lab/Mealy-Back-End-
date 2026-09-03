@@ -19,5 +19,5 @@ RUN mkdir -p instance
 
 EXPOSE 5000
 
-# Initialize database and run
-CMD ["sh", "-c", "flask seed && gunicorn app:app --bind 0.0.0.0:5000"]
+# Run the app (tables are created automatically by create_app on startup)
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:5000"]

@@ -15,6 +15,15 @@ services:
         generateValue: true
       - key: SECRET_KEY
         generateValue: true
+      - key: CORS_ORIGINS
+        value: https://mealy-front-end-build.vercel.app
+      - key: MPESA_CONSUMER_KEY
+      - key: MPESA_CONSUMER_SECRET
+      - key: MPESA_SHORTCODE
+      - key: MPESA_PASSKEY
+      - key: MPESA_CALLBACK_URL
+      - key: MPESA_ENVIRONMENT
+        value: sandbox
 
 databases:
   - name: mealy-db

@@ -3,7 +3,16 @@ Basic API integration tests for the Mealy backend.
 Run with: python test_api.py
 """
 import json
+import os
 import unittest
+
+# Always run tests against an isolated in-memory SQLite database.
+# The tests create and drop tables, so they must never point at the
+# real database from .env. Set this before importing the app so it
+# wins over the .env file.
+os.environ['DATABASE_URL'] = 'sqlite://'
+os.environ['FLASK_ENV'] = 'development'
+
 from app import create_app
 from config import db
 
@@ -107,7 +116,7 @@ class TestMenuEndpoints(unittest.TestCase):
             import bcrypt
             from models import User
             pw = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-            admin = User(name='Admin', email='admin@test.com', password_hash=pw, role='admin')
+            admin = User(name='Admin', email='admin@test.com', password_hash=pw, role='admin', caterer_id='test-caterer')
             db.session.add(admin)
             db.session.commit()
             self.admin_id = admin.id
@@ -124,7 +133,10 @@ class TestMenuEndpoints(unittest.TestCase):
         return json.loads(response.data)['token']
 
     def test_list_meal_options_empty(self):
-        response = self.client.get('/api/menus/')
+        token = self._get_admin_token()
+        response = self.client.get('/api/menus/', headers={
+            'Authorization': f'Bearer {token}'
+        })
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         self.assertEqual(data['mealOptions'], [])
@@ -139,7 +151,10 @@ class TestMenuEndpoints(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
 
     def test_get_today_menu(self):
-        response = self.client.get('/api/menus/today')
+        token = self._get_admin_token()
+        response = self.client.get('/api/menus/today', headers={
+            'Authorization': f'Bearer {token}'
+        })
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         self.assertFalse(data['isPublished'])
