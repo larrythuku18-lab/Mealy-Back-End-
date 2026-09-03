@@ -1,6 +1,6 @@
 import os
 import click
-from flask import Flask, jsonify, g
+from flask import Flask, jsonify, g, request
 from flask_cors import CORS
 from datetime import datetime, timezone
 from config import db, Config
@@ -69,6 +69,28 @@ def create_app(config_name=None):
             'status': 'UP',
             'timestamp': datetime.now(timezone.utc).isoformat()
         }), 200
+
+    # TEMPORARY one-off maintenance route: the production database has a
+    # stale schema (caterer_id was INTEGER under an older version of the
+    # models; the app now treats it as a string), and db.create_all() only
+    # creates missing tables, never alters existing ones. This re-runs the
+    # same drop/recreate/reseed the `flask seed` CLI command does, since
+    # that CLI isn't reachable on Vercel's serverless deployment. Requires
+    # ADMIN_RESET_TOKEN to be set; fails closed (404) if it isn't, and
+    # remove this route + the env var once the reset has been run.
+    @app.route('/api/_maintenance/reset-db', methods=['POST'])
+    def maintenance_reset_db():
+        import hmac
+        expected = os.getenv('ADMIN_RESET_TOKEN')
+        if not expected:
+            return jsonify({'error': 'Not found'}), 404
+        provided = request.headers.get('X-Reset-Token', '')
+        if not hmac.compare_digest(provided, expected):
+            return jsonify({'error': 'Not found'}), 404
+
+        from seed import seed_database
+        seed_database()
+        return jsonify({'message': 'Database reset and reseeded'}), 200
 
     # Error handlers
     @app.errorhandler(404)
