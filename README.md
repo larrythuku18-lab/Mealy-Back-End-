@@ -50,6 +50,12 @@ The server starts at `http://localhost:5000`.
 | larry@mealy.com  | user123   | user  |
 | joy@mealy.com    | user123   | user  |
 
+> **Frontend compatibility:** the deployed Mealy frontend calls the auth, menu,
+> and order endpoints **without** the `/api` prefix and uses a singular `/menu`
+> path. Those routes are mounted under both prefixes, so `/auth/register`,
+> `/menu/today`, `/orders/`, etc. work exactly like their `/api/*` equivalents.
+> All other endpoints are only available under `/api/*`.
+
 ## Authentication
 
 All protected endpoints expect an `Authorization: Bearer <token>` header. Tokens are
@@ -173,7 +179,9 @@ POST /api/auth/register
 }
 ```
 Response: `201` with `{ "token": "<jwt>", "user": {...} }`.
-The `role` field in the request body is ignored — new users are always created as `user`.
+The optional `role` field accepts only safe roles — `user`, `customer`, or
+`caterer` (defaults to `user`). Requesting `admin` (or any other value) is
+rejected with `400`; admin accounts are created via seed, never public signup.
 
 ### Login
 ```json
@@ -250,3 +258,32 @@ flask seed
 If `DATABASE_URL` is not set, the app falls back to a local SQLite database
 (`instance/mealy.db`). For M-Pesa testing, set `MPESA_ENVIRONMENT=sandbox` and use a
 Safaricom sandbox test number.
+
+## Deployment (Vercel)
+
+The repo includes a Vercel serverless config (`vercel.json` + `api/index.py`).
+To deploy:
+
+1. Create the Vercel project from this repo, or import it in the Vercel dashboard.
+2. **Name the project `mealy-back-end`** — the deployed frontend hardcodes the API
+   base URL `https://mealy-back-end.vercel.app/`, so the project name must match
+   exactly (hyphens included).
+3. Set the following environment variables in the Vercel project settings
+   (Framework Preset: Other):
+
+   | Variable | Example value |
+   |----------|---------------|
+   | `DATABASE_URL` | `postgresql://...` (Neon) |
+   | `SECRET_KEY` | any long random string |
+   | `JWT_SECRET_KEY` | any long random string |
+   | `CORS_ORIGINS` | `https://mealy-front-end-build.vercel.app` |
+   | `MPESA_CONSUMER_KEY` | Safaricom sandbox key |
+   | `MPESA_CONSUMER_SECRET` | Safaricom sandbox secret |
+   | `MPESA_SHORTCODE` | e.g. `174379` |
+   | `MPESA_PASSKEY` | Safaricom sandbox passkey |
+   | `MPESA_CALLBACK_URL` | `https://mealy-back-end.vercel.app/api/payments/callback` |
+   | `MPESA_ENVIRONMENT` | `sandbox` (or `production`) |
+
+   Without `SECRET_KEY`/`JWT_SECRET_KEY` the app falls back to insecure dev
+   defaults — always set them in production.
+4. Deploy. Tables are created automatically on first request (`db.create_all()`).

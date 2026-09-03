@@ -154,6 +154,20 @@ def register():
             'Password must be at least 6 characters'
         )
 
+    # Only safe, non-privileged roles may be requested at registration.
+    # Admin accounts are created via seed or directly in the database,
+    # never through public signup.
+    safe_roles = {'user', 'customer', 'caterer'}
+    requested_role = data.get('role')
+    if requested_role is not None:
+        if requested_role not in safe_roles:
+            return bad_request(
+                f"role must be one of: {', '.join(sorted(safe_roles))}"
+            )
+        role = requested_role
+    else:
+        role = 'user'
+
     password_hash = bcrypt.hashpw(
         password.encode('utf-8'),
         bcrypt.gensalt()
@@ -164,7 +178,7 @@ def register():
         email=email,
         password_hash=password_hash,
         phone=phone,
-        role='user',
+        role=role,
         address=address
     )
 

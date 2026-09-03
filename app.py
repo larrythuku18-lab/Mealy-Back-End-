@@ -38,10 +38,16 @@ def create_app(config_name=None):
     from routes.notification import notification_bp
     from routes.sales import sales_bp
 
+    # Auth, menu, and order blueprints are mounted under both the
+    # documented /api/* prefixes and the bare paths (/auth, /menu,
+    # /orders) that the deployed Mealy frontend calls.
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(auth_bp, url_prefix='/auth', name='auth_frontend')
     app.register_blueprint(user_bp, url_prefix='/api/users')
     app.register_blueprint(menu_bp, url_prefix='/api/menus')
+    app.register_blueprint(menu_bp, url_prefix='/menu', name='menu_frontend')
     app.register_blueprint(order_bp, url_prefix='/api/orders')
+    app.register_blueprint(order_bp, url_prefix='/orders', name='order_frontend')
     app.register_blueprint(review_bp, url_prefix='/api/reviews')
     app.register_blueprint(royalty_bp, url_prefix='/api/royalties')
     app.register_blueprint(category_bp, url_prefix='/api/categories')

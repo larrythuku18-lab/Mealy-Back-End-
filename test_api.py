@@ -48,6 +48,26 @@ class TestAuthEndpoints(unittest.TestCase):
         self.assertEqual(data['user']['name'], 'Test User')
         self.assertEqual(data['user']['email'], 'test@example.com')
 
+    def test_register_accepts_safe_role(self):
+        response = self.client.post('/api/auth/register', json={
+            'name': 'Caterer User',
+            'email': 'caterer@example.com',
+            'password': 'password123',
+            'role': 'caterer',
+        })
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data)
+        self.assertEqual(data['user']['role'], 'caterer')
+
+    def test_register_rejects_admin_role(self):
+        response = self.client.post('/api/auth/register', json={
+            'name': 'Sneaky Admin',
+            'email': 'sneaky@example.com',
+            'password': 'password123',
+            'role': 'admin',
+        })
+        self.assertEqual(response.status_code, 400)
+
     def test_register_duplicate_email(self):
         self.client.post('/api/auth/register', json={
             'name': 'User One',
@@ -159,6 +179,82 @@ class TestMenuEndpoints(unittest.TestCase):
         data = json.loads(response.data)
         self.assertFalse(data['isPublished'])
         self.assertEqual(data['mealOptionIds'], [])
+
+
+class TestFrontendCompatEndpoints(unittest.TestCase):
+    """
+    The deployed Mealy frontend calls the API without the /api prefix
+    and with a singular /menu path. These endpoints must work too.
+    """
+    def setUp(self):
+        self.app = create_app('development')
+        self.app.config['TESTING'] = True
+        self.client = self.app.test_client()
+
+        with self.app.app_context():
+            db.create_all()
+
+            import bcrypt
+            from models import User
+            pw = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            admin = User(name='Admin', email='admin@test.com', password_hash=pw, role='admin', caterer_id='test-caterer')
+            db.session.add(admin)
+            db.session.commit()
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.drop_all()
+
+    def test_register_via_bare_path(self):
+        response = self.client.post('/auth/register', json={
+            'name': 'Frontend User',
+            'email': 'frontend@example.com',
+            'password': 'password123',
+        })
+        self.assertEqual(response.status_code, 201)
+        self.assertIn('token', json.loads(response.data))
+
+    def test_login_via_bare_path(self):
+        self.client.post('/auth/register', json={
+            'name': 'Frontend User',
+            'email': 'frontend@example.com',
+            'password': 'password123',
+        })
+        response = self.client.post('/auth/login', json={
+            'email': 'frontend@example.com',
+            'password': 'password123',
+        })
+        self.assertEqual(response.status_code, 200)
+
+    def test_menu_via_bare_path(self):
+        login = self.client.post('/auth/login', json={
+            'email': 'admin@test.com',
+            'password': 'admin123',
+        })
+        token = json.loads(login.data)['token']
+        headers = {'Authorization': f'Bearer {token}'}
+
+        response = self.client.get('/menu/', headers=headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data)['mealOptions'], [])
+
+        response = self.client.get('/menu/today', headers=headers)
+        self.assertEqual(response.status_code, 200)
+
+    def test_orders_via_bare_path(self):
+        login = self.client.post('/auth/login', json={
+            'email': 'admin@test.com',
+            'password': 'admin123',
+        })
+        token = json.loads(login.data)['token']
+        headers = {'Authorization': f'Bearer {token}'}
+
+        response = self.client.get('/orders/', headers=headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data)['orders'], [])
+
+        response = self.client.get('/orders/today', headers=headers)
+        self.assertEqual(response.status_code, 200)
 
 
 if __name__ == '__main__':
