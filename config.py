@@ -12,6 +12,16 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///mealy.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Managed Postgres (Neon, etc.) closes idle connections; on a warm-but-
+    # idle serverless instance SQLAlchemy would otherwise hand out a pooled
+    # connection the DB has already dropped ("SSL connection has been
+    # closed unexpectedly"). pre_ping tests each connection before use and
+    # transparently reconnects; recycle proactively retires connections
+    # before they're likely to have gone stale.
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'pool_recycle': 280,
+    }
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'dev-jwt-secret')
     JWT_ACCESS_TOKEN_EXPIRES = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES', 3600))
 
