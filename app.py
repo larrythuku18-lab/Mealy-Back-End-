@@ -88,6 +88,17 @@ def create_app(config_name=None):
         if not hmac.compare_digest(provided, expected):
             return jsonify({'error': 'Not found'}), 404
 
+        # A legacy `caterers` table (from an unused model) still holds real
+        # FK constraints on meal_options/daily_menus that today's metadata
+        # doesn't know about, so db.drop_all() (used inside seed_database)
+        # can't order the drops correctly and Postgres rejects it. Nuke the
+        # whole schema first so there's nothing left with stale constraints.
+        from sqlalchemy import text
+        with db.engine.connect() as conn:
+            conn.execute(text('DROP SCHEMA public CASCADE'))
+            conn.execute(text('CREATE SCHEMA public'))
+            conn.commit()
+
         from seed import seed_database
         seed_database()
         return jsonify({'message': 'Database reset and reseeded'}), 200
