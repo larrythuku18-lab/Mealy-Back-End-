@@ -99,6 +99,7 @@ def seed_database():
         today_menu = DailyMenu(
             date=date.today(),
             is_published=True,
+            caterer_id=admin.caterer_id,
         )
         today_menu.set_meal_option_ids([1, 2, 3, 4, 5])
         db.session.add(today_menu)

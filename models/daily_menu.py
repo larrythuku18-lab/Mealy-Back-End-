@@ -15,8 +15,7 @@ class DailyMenu(db.Model):
     )
 
     caterer_id = db.Column(
-        db.Integer,
-        db.ForeignKey('caterers.id'),
+        db.String(128),
         nullable=True
     )
 
@@ -45,13 +44,6 @@ class DailyMenu(db.Model):
         default='[]'
     )
 
-    # Relationship with Caterer
-    caterer = db.relationship(
-        'Caterer',
-        backref='daily_menus',
-        lazy=True
-    )
-    
     __table_args__ = (
       db.UniqueConstraint(
         'caterer_id',
