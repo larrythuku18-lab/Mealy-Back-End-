@@ -1,6 +1,6 @@
 import os
 import click
-from flask import Flask, jsonify, g
+from flask import Flask, jsonify, g, request
 from flask_cors import CORS
 from datetime import datetime, timezone
 from config import db, Config
@@ -69,6 +69,42 @@ def create_app(config_name=None):
             'status': 'UP',
             'timestamp': datetime.now(timezone.utc).isoformat()
         }), 200
+
+    # TEMPORARY one-off maintenance route: backfills the `image` column on
+    # existing meal_options rows (production has real order/user data now,
+    # so this updates in place rather than reseeding). Gated the same way
+    # as the earlier reset route; fails closed (404) if ADMIN_RESET_TOKEN
+    # isn't set. Remove this route once it's been run.
+    @app.route('/api/_maintenance/backfill-images', methods=['POST'])
+    def maintenance_backfill_images():
+        import hmac
+        expected = os.getenv('ADMIN_RESET_TOKEN')
+        if not expected:
+            return jsonify({'error': 'Not found'}), 404
+        provided = request.headers.get('X-Reset-Token', '')
+        if not hmac.compare_digest(provided, expected):
+            return jsonify({'error': 'Not found'}), 404
+
+        from models import MealOption
+        images = {
+            'Pancake Stack': 'https://placehold.co/400x300/fde68a/78350f?text=Pancake+Stack',
+            'Caesar Salad': 'https://placehold.co/400x300/bbf7d0/14532d?text=Caesar+Salad',
+            'Grilled Chicken Pasta': 'https://placehold.co/400x300/c7d2fe/312e81?text=Grilled+Chicken+Pasta',
+            'Avocado Toast': 'https://placehold.co/400x300/fde68a/78350f?text=Avocado+Toast',
+            'Berry Smoothie': 'https://placehold.co/400x300/a5f3fc/164e63?text=Berry+Smoothie',
+            'Grilled Salmon': 'https://placehold.co/400x300/c7d2fe/312e81?text=Grilled+Salmon',
+            'Chicken Wrap': 'https://placehold.co/400x300/bbf7d0/14532d?text=Chicken+Wrap',
+            'Energy Bites': 'https://placehold.co/400x300/fed7aa/7c2d12?text=Energy+Bites',
+            'Iced Lemon Tea': 'https://placehold.co/400x300/a5f3fc/164e63?text=Iced+Lemon+Tea',
+            'Mushroom Omelette': 'https://placehold.co/400x300/fde68a/78350f?text=Mushroom+Omelette',
+        }
+        updated = 0
+        for meal_option in MealOption.query.all():
+            if meal_option.name in images:
+                meal_option.image = images[meal_option.name]
+                updated += 1
+        db.session.commit()
+        return jsonify({'message': f'Updated {updated} meal option(s)'}), 200
 
     # Error handlers
     @app.errorhandler(404)
