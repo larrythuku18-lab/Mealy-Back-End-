@@ -82,33 +82,22 @@ def seed_database():
         db.session.flush()
 
         # --- Meal Options ---
-        # Placeholder images (placehold.co, colored by category) — there's
-        # no real food photography to seed with, and guessing at stock-photo
-        # URLs risks pointing at images that don't exist or don't match.
-        category_colors = {
-            'Breakfast': ('fde68a', '78350f'),
-            'Lunch': ('bbf7d0', '14532d'),
-            'Dinner': ('c7d2fe', '312e81'),
-            'Snacks': ('fed7aa', '7c2d12'),
-            'Drinks': ('a5f3fc', '164e63'),
-        }
-
-        def placeholder_image(name, category):
-            bg, fg = category_colors[category]
-            label = name.replace(' ', '+')
-            return f'https://placehold.co/400x300/{bg}/{fg}?text={label}'
-
+        # No `image` set: the frontend generates a food-themed SVG
+        # illustration from the name/description when there's no photo,
+        # which looks better than a placeholder box and (unlike a
+        # placehold.co-style placeholder) doesn't bake redundant text into
+        # the image itself.
         meal_options = [
-            MealOption(name='Pancake Stack', description='Fluffy pancakes with maple syrup and fresh berries', price=850, category='Breakfast', caterer_id='dev-caterer', image=placeholder_image('Pancake Stack', 'Breakfast')),
-            MealOption(name='Caesar Salad', description='Romaine lettuce, parmesan, croutons, and Caesar dressing', price=1000, category='Lunch', caterer_id='dev-caterer', image=placeholder_image('Caesar Salad', 'Lunch')),
-            MealOption(name='Grilled Chicken Pasta', description='Penne pasta with grilled chicken in Alfredo sauce', price=1400, category='Dinner', caterer_id='dev-caterer', image=placeholder_image('Grilled Chicken Pasta', 'Dinner')),
-            MealOption(name='Avocado Toast', description='Sourdough toast topped with smashed avocado and poached egg', price=900, category='Breakfast', caterer_id='dev-caterer', image=placeholder_image('Avocado Toast', 'Breakfast')),
-            MealOption(name='Berry Smoothie', description='Mixed berries blended with yogurt and honey', price=650, category='Drinks', caterer_id='dev-caterer', image=placeholder_image('Berry Smoothie', 'Drinks')),
-            MealOption(name='Grilled Salmon', description='Atlantic salmon with lemon butter and roasted vegetables', price=1800, category='Dinner', caterer_id='dev-caterer', image=placeholder_image('Grilled Salmon', 'Dinner')),
-            MealOption(name='Chicken Wrap', description='Grilled chicken, veggies, and hummus in a whole wheat wrap', price=1100, category='Lunch', caterer_id='dev-caterer', image=placeholder_image('Chicken Wrap', 'Lunch')),
-            MealOption(name='Energy Bites', description='Oat and peanut butter energy balls with dark chocolate chips', price=500, category='Snacks', caterer_id='dev-caterer', image=placeholder_image('Energy Bites', 'Snacks')),
-            MealOption(name='Iced Lemon Tea', description='Refreshing iced tea with fresh lemon and mint', price=400, category='Drinks', caterer_id='dev-caterer', image=placeholder_image('Iced Lemon Tea', 'Drinks')),
-            MealOption(name='Mushroom Omelette', description='Three-egg omelette with sautéed mushrooms and cheese', price=950, category='Breakfast', caterer_id='dev-caterer', image=placeholder_image('Mushroom Omelette', 'Breakfast')),
+            MealOption(name='Pancake Stack', description='Fluffy pancakes with maple syrup and fresh berries', price=850, category='Breakfast', caterer_id='dev-caterer'),
+            MealOption(name='Caesar Salad', description='Romaine lettuce, parmesan, croutons, and Caesar dressing', price=1000, category='Lunch', caterer_id='dev-caterer'),
+            MealOption(name='Grilled Chicken Pasta', description='Penne pasta with grilled chicken in Alfredo sauce', price=1400, category='Dinner', caterer_id='dev-caterer'),
+            MealOption(name='Avocado Toast', description='Sourdough toast topped with smashed avocado and poached egg', price=900, category='Breakfast', caterer_id='dev-caterer'),
+            MealOption(name='Berry Smoothie', description='Mixed berries blended with yogurt and honey', price=650, category='Drinks', caterer_id='dev-caterer'),
+            MealOption(name='Grilled Salmon', description='Atlantic salmon with lemon butter and roasted vegetables', price=1800, category='Dinner', caterer_id='dev-caterer'),
+            MealOption(name='Chicken Wrap', description='Grilled chicken, veggies, and hummus in a whole wheat wrap', price=1100, category='Lunch', caterer_id='dev-caterer'),
+            MealOption(name='Energy Bites', description='Oat and peanut butter energy balls with dark chocolate chips', price=500, category='Snacks', caterer_id='dev-caterer'),
+            MealOption(name='Iced Lemon Tea', description='Refreshing iced tea with fresh lemon and mint', price=400, category='Drinks', caterer_id='dev-caterer'),
+            MealOption(name='Mushroom Omelette', description='Three-egg omelette with sautéed mushrooms and cheese', price=950, category='Breakfast', caterer_id='dev-caterer'),
         ]
         for mo in meal_options:
             db.session.add(mo)
