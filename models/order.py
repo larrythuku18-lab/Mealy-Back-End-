@@ -38,6 +38,7 @@ class Order(db.Model):
             'customerName': self.user.name if self.user else 'Unknown',
             'mealOptionName': meal_option_name,
             'price': self.total_amount,
+            'status': self.status,
             'createdAt': self.created_at.isoformat() if self.created_at else None,
         }
 
