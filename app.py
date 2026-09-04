@@ -1,6 +1,6 @@
 import os
 import click
-from flask import Flask, jsonify, g, request
+from flask import Flask, jsonify, g
 from flask_cors import CORS
 from datetime import datetime, timezone
 from config import db, Config
@@ -69,31 +69,6 @@ def create_app(config_name=None):
             'status': 'UP',
             'timestamp': datetime.now(timezone.utc).isoformat()
         }), 200
-
-    # TEMPORARY one-off maintenance route: clears the placehold.co image
-    # URLs backfilled earlier — they bake their ?text= label into the
-    # image, which duplicates the dish name once the frontend also shows
-    # it as a heading (the new dish slideshow). Same gate/pattern as the
-    # earlier maintenance routes; remove after use.
-    @app.route('/api/_maintenance/clear-images', methods=['POST'])
-    def maintenance_clear_images():
-        import hmac
-        expected = os.getenv('ADMIN_RESET_TOKEN')
-        if not expected:
-            return jsonify({'error': 'Not found'}), 404
-        provided = request.headers.get('X-Reset-Token', '')
-        if not hmac.compare_digest(provided, expected):
-            return jsonify({'error': 'Not found'}), 404
-
-        from models import MealOption
-        updated = 0
-        for meal_option in MealOption.query.filter(
-            MealOption.image.like('https://placehold.co/%')
-        ).all():
-            meal_option.image = None
-            updated += 1
-        db.session.commit()
-        return jsonify({'message': f'Cleared {updated} meal option image(s)'}), 200
 
     # Error handlers
     @app.errorhandler(404)
