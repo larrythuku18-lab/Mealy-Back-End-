@@ -93,6 +93,26 @@ def stk_push():
         }), 500
 
 
+@payment_bp.route('/<int:payment_id>', methods=['GET'])
+@auth_required
+def get_payment(payment_id):
+    """
+    Look up a payment's status — the frontend polls this after
+    initiating an STK push, since the actual pending -> completed/failed
+    transition happens asynchronously via the Safaricom callback below.
+    """
+
+    payment = db.session.get(Payment, payment_id)
+
+    if not payment:
+        return jsonify({'error': 'Payment not found'}), 404
+
+    if payment.user_id != g.current_user.id:
+        return jsonify({'error': 'You can only view your own payments'}), 403
+
+    return jsonify({'payment': payment.to_dict()}), 200
+
+
 @payment_bp.route('/callback', methods=['POST'])
 def mpesa_callback():
     """
