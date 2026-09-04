@@ -98,6 +98,16 @@ def seed_database():
             MealOption(name='Energy Bites', description='Oat and peanut butter energy balls with dark chocolate chips', price=500, category='Snacks', caterer_id='dev-caterer'),
             MealOption(name='Iced Lemon Tea', description='Refreshing iced tea with fresh lemon and mint', price=400, category='Drinks', caterer_id='dev-caterer'),
             MealOption(name='Mushroom Omelette', description='Three-egg omelette with sautéed mushrooms and cheese', price=950, category='Breakfast', caterer_id='dev-caterer'),
+            MealOption(name='French Toast', description='Golden brioche French toast with berry syrup and powdered sugar', price=800, category='Breakfast', caterer_id='dev-caterer'),
+            MealOption(name='Greek Yogurt Parfait', description='Layers of Greek yogurt, granola, and mixed berries', price=600, category='Breakfast', caterer_id='dev-caterer'),
+            MealOption(name='Club Sandwich', description='Triple-decker sandwich with chicken, bacon, lettuce, and tomato', price=1050, category='Lunch', caterer_id='dev-caterer'),
+            MealOption(name='Margherita Pizza', description='Wood-fired pizza with tomato, fresh mozzarella, and basil', price=1500, category='Lunch', caterer_id='dev-caterer'),
+            MealOption(name='Beef Stir Fry', description='Tender beef strips stir-fried with mixed vegetables in soy sauce', price=1600, category='Dinner', caterer_id='dev-caterer'),
+            MealOption(name='Vegetable Curry', description='Mixed vegetables simmered in a fragrant coconut curry sauce', price=1200, category='Dinner', caterer_id='dev-caterer'),
+            MealOption(name='Loaded Nachos', description='Crispy tortilla chips topped with cheese, jalapenos, and salsa', price=750, category='Snacks', caterer_id='dev-caterer'),
+            MealOption(name='Hummus with Pita', description='Creamy hummus served with warm pita bread and olive oil', price=550, category='Snacks', caterer_id='dev-caterer'),
+            MealOption(name='Mango Juice', description='Freshly squeezed mango juice, chilled and served over ice', price=450, category='Drinks', caterer_id='dev-caterer'),
+            MealOption(name='Cappuccino', description='Espresso topped with steamed milk and a layer of foam', price=350, category='Drinks', caterer_id='dev-caterer'),
         ]
         for mo in meal_options:
             db.session.add(mo)
